@@ -1,0 +1,54 @@
+# 小红书自动化工具配置
+# 复制此文件为 config.yaml 并填写你的真实配置
+
+# 阿里云百炼 API 配置
+aliyun:
+  api_key: "your-dashscope-api-key-here"
+  
+# 小红书账号配置（用于发布）
+xiaohongshu:
+  # 登录态 Cookie（可选，如果已经手动登录过可以留空）
+  cookies: {}
+  
+# 搜索配置
+search:
+  # 默认排序方式: time_descending(最新), hot(最热), comprehensive(综合)
+  default_sort: "time_descending"
+  # 默认笔记类型: 51(图文), 其他值根据实际接口调整
+  default_note_type: 51
+  # 每页获取数量
+  page_size: 20
+  # 默认最大获取笔记数
+  max_notes: 50
+  # 最小点赞数过滤
+  min_likes: 10
+  
+# 内容生成配置
+content:
+  # 生成话题数量
+  topic_count: 10
+  # 每个话题生成图片数量
+  images_per_topic: 5
+  # 图片尺寸（万相API支持的尺寸）:
+  # - "1024*1024" (1:1方形)
+  # - "720*1280" (9:16竖屏，适合抖音/快手)
+  # - "768*1152" (2:3竖屏，适合小红书)
+  # - "1280*720" (16:9横屏)
+  image_size: "768*1152"
+  
+# 发布配置
+publish:
+  # 发布间隔时间(秒)
+  min_interval: 120
+  max_interval: 180
+  # 是否启用人工确认模式
+  manual_confirm: true
+  
+# 风控配置
+risk_control:
+  # 搜索间隔时间(秒)
+  search_interval: 300
+  # 每日最大发布数量
+  max_daily_publish: 10
+  # 是否启用随机延迟
+  random_delay: true

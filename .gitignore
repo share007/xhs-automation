@@ -1,0 +1,49 @@
+# 环境变量文件
+.env
+.env.local
+
+# 配置文件（包含敏感信息）
+# config/config.yaml.example 是模板，不应被忽略
+config/config.yaml
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志和调试文件
+logs/
+*.log
+
+# 生成的内容
+results/
+images/
+
+# 测试和覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# OS 文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
