@@ -504,7 +504,7 @@ class XHSAdvancedSearch:
         """关闭浏览器"""
         try:
             self.page.quit()
-        except:
+        except Exception:
             pass
 
     def __enter__(self):
@@ -515,7 +515,15 @@ class XHSAdvancedSearch:
 
 
 class DataQualityFilter:
-    """数据质量过滤器"""
+    """数据质量过滤器 - 精品笔记选取"""
+
+    # 加权评分权重（评论和分享是更强的质量信号）
+    SCORE_WEIGHTS = {
+        "liked_count": 1.0,
+        "collected_count": 2.0,
+        "comment_count": 3.0,
+        "share_count": 5.0,
+    }
 
     @staticmethod
     def filter_by_interaction(
@@ -579,3 +587,134 @@ class DataQualityFilter:
         """
         sorted_notes = sorted(notes, key=lambda x: x.get(sort_by, 0), reverse=True)
         return sorted_notes[:n]
+
+    @classmethod
+    def score_note(cls, note: Dict) -> float:
+        """
+        对单条笔记进行加权评分
+
+        评分公式：(点赞×1 + 收藏×2 + 评论×3 + 分享×5) × 互动率修正
+
+        Args:
+            note: 笔记数据字典
+
+        Returns:
+            综合评分
+        """
+        raw_score = sum(
+            note.get(field, 0) * weight
+            for field, weight in cls.SCORE_WEIGHTS.items()
+        )
+
+        # 互动率修正：互动率越高说明内容质量越好
+        engagement_rate = note.get("engagement_rate", 1.0)
+        engagement_bonus = max(1.0, min(engagement_rate, 5.0))  # 限制在 [1, 5]
+
+        # 内容丰富度加分：有描述的笔记加分
+        desc = note.get("desc", "")
+        content_bonus = 1.0
+        if len(desc) > 100:
+            content_bonus = 1.2
+        elif len(desc) > 50:
+            content_bonus = 1.1
+
+        return raw_score * engagement_bonus * content_bonus
+
+    @staticmethod
+    def _title_similarity(title_a: str, title_b: str, ngram_size: int = 2) -> float:
+        """
+        计算两个标题的字符 n-gram 相似度（Jaccard 系数）
+
+        Args:
+            title_a: 标题A
+            title_b: 标题B
+            ngram_size: n-gram 大小
+
+        Returns:
+            相似度 [0, 1]
+        """
+        if not title_a or not title_b:
+            return 0.0
+
+        def _ngrams(text: str, n: int) -> set:
+            return {text[i : i + n] for i in range(max(1, len(text) - n + 1))}
+
+        ngrams_a = _ngrams(title_a, ngram_size)
+        ngrams_b = _ngrams(title_b, ngram_size)
+
+        if not ngrams_a or not ngrams_b:
+            return 0.0
+
+        intersection = ngrams_a & ngrams_b
+        union = ngrams_a | ngrams_b
+        return len(intersection) / len(union) if union else 0.0
+
+    @classmethod
+    def select_premium_notes(
+        cls,
+        notes: List[Dict],
+        n: int = 50,
+        diversity_threshold: float = 0.6,
+        log_callback: Optional[Callable] = None,
+    ) -> List[Dict]:
+        """
+        精品笔记筛选：加权评分 + 内容多样性去重
+
+        筛选逻辑：
+        1. 对所有笔记进行加权评分
+        2. 按评分降序排列
+        3. 贪心选取：跳过与已选笔记标题过于相似的笔记（确保内容多样性）
+
+        Args:
+            notes: 原始笔记列表
+            n: 目标选取数量
+            diversity_threshold: 相似度阈值（> 此值视为重复，默认0.6）
+            log_callback: 日志回调
+
+        Returns:
+            精品笔记列表
+        """
+        if log_callback is None:
+            log_callback = print
+
+        if not notes:
+            return []
+
+        # 1. 计算评分并排序
+        scored = [(cls.score_note(note), note) for note in notes]
+        scored.sort(key=lambda x: x[0], reverse=True)
+
+        # 2. 贪心选取（确保多样性）
+        selected: List[Dict] = []
+        skipped_similar = 0
+
+        for score, note in scored:
+            if len(selected) >= n:
+                break
+
+            title = note.get("title", "")
+
+            # 检查与已选笔记的相似度
+            is_duplicate = False
+            for existing in selected:
+                similarity = cls._title_similarity(
+                    title, existing.get("title", "")
+                )
+                if similarity > diversity_threshold:
+                    is_duplicate = True
+                    skipped_similar += 1
+                    break
+
+            if not is_duplicate:
+                note["quality_score"] = round(score, 1)
+                selected.append(note)
+
+        log_callback(
+            f"   📊 精品筛选: {len(notes)} → {len(selected)} 条"
+            f"（跳过 {skipped_similar} 条相似内容）"
+        )
+        if selected:
+            avg_score = sum(n.get("quality_score", 0) for n in selected) / len(selected)
+            log_callback(f"   ⭐ 平均质量评分: {avg_score:.1f}")
+
+        return selected

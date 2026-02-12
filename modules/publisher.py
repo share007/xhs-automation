@@ -109,9 +109,12 @@ class XHSPublisher:
                 log_callback("⚠️  注意：全自动模式可能触发平台风控，请谨慎使用\n")
 
                 # 等待用户发布完成
-                user_input = input(
-                    "请完成发布后按 Enter 键继续（输入 'skip' 跳过此笔记）..."
-                )
+                from utils.colors import colorize, C, highlight
+
+                prompt_msg = colorize("请完成发布后按 Enter 键继续（输入 '", C.YELLOW)
+                skip_hint = colorize("skip", C.BRIGHT_CYAN, C.BOLD)
+                prompt_end = colorize("' 跳过此笔记）...", C.YELLOW)
+                user_input = input(f"\n{prompt_msg}{skip_hint}{prompt_end}")
                 if user_input.strip().lower() == "skip":
                     log_callback("⏭️  用户选择跳过此笔记")
                     return False
@@ -130,7 +133,9 @@ class XHSPublisher:
                     return True
                 else:
                     log_callback("  ⚠️ 自动发布失败，请手动点击发布按钮")
-                    input("按 Enter 键继续...")
+                    from utils.colors import colorize, C
+
+                    input(colorize("\n按 Enter 键继续...", C.YELLOW))
                     return False
 
         except Exception as e:
@@ -191,7 +196,7 @@ class XHSPublisher:
                                 uploaded_count += 1
                                 time.sleep(2)
                                 break
-                    except:
+                    except Exception:
                         continue
                 else:
                     log_callback(f"      ❌ 第 {i + 1} 张上传失败，未找到上传控件")
@@ -229,7 +234,7 @@ class XHSPublisher:
                     tab.click()
                     log_callback(f"      ✅ 已点击图文选项")
                     return True
-            except:
+            except Exception:
                 continue
 
         log_callback(f"      ⏭️ 无需切换或已默认图文模式")
@@ -257,10 +262,10 @@ class XHSPublisher:
                     title_input.input(title)
                     log_callback(f"      ✓ 标题已填写: {title[:20]}...")
                     return True
-            except:
+            except Exception:
                 continue
 
-        log_callback("  ⚠️ 未找到标题输入框")
+        log_callback(" ⚠️ 未找到标题输入框")
         return False
 
     def _fill_content_auto(
@@ -292,10 +297,10 @@ class XHSPublisher:
                     content_input.input(full_content)
                     log_callback(f"      ✓ 正文已填写 ({len(full_content)} 字)")
                     return True
-            except:
+            except Exception:
                 continue
 
-        log_callback("  ⚠️ 未找到正文输入框")
+        log_callback(" ⚠️ 未找到正文输入框")
         return False
 
     def _click_publish_auto(self, log_callback: Callable) -> bool:
@@ -317,10 +322,10 @@ class XHSPublisher:
                     publish_btn.click()
                     log_callback("      ✓ 已点击发布按钮")
                     return True
-            except:
+            except Exception:
                 continue
 
-        log_callback("  ⚠️ 未找到或无法点击发布按钮")
+        log_callback(" ⚠️ 未找到或无法点击发布按钮")
         return False
 
     def publish_batch(
@@ -396,7 +401,7 @@ class XHSPublisher:
         """关闭浏览器"""
         try:
             self.page.quit()
-        except:
+        except Exception:
             pass
 
     def __enter__(self):

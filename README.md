@@ -102,14 +102,27 @@ python main.py -k "春日穿搭" -n 20 -t 3
 ### 模型选择
 
 ```bash
-# 使用快速模型（推荐）
+# 使用默认模型（qwen3-max，思考模式，最强性能）
+python main.py -k "春日穿搭"
+
+# 使用快速模型（适合测试）
 python main.py -k "春日穿搭" --ai-model qwen-turbo
 
-# 使用默认模型（平衡）
+# 使用平衡模型（推荐日常使用）
 python main.py -k "春日穿搭" --ai-model qwen-plus
+```
 
-# 使用最强模型（高质量）
-python main.py -k "春日穿搭" --ai-model qwen-max
+### 思考模式控制
+
+```bash
+# 默认自动模式：复杂任务启用思考，简单任务禁用
+python main.py -k "春日穿搭"
+
+# 强制启用思考模式（所有任务都启用，较慢）
+python main.py -k "春日穿搭" --enable-thinking
+
+# 强制禁用思考模式（所有任务都不启用，较快）
+python main.py -k "春日穿搭" --disable-thinking
 ```
 
 ### 调试模式
@@ -197,7 +210,7 @@ xhs_automation/
 | `--max-notes` | `-n` | 爬取笔记数量 | 50 |
 | `--topics` | `-t` | AI 提取话题数量 | 10 |
 | `--min-likes` | `-l` | 最小点赞数过滤 | 0 |
-| `--ai-model` | - | AI 模型选择 | qwen-plus |
+| `--ai-model` | - | AI 模型选择 | qwen3-max-2026-01-23 |
 | `--debug` | `-d` | 调试模式 | 关闭 |
 | `--verbose` | `-v` | 详细输出 | 关闭 |
 | `--skip-search` | - | 跳过搜索 | 否 |
